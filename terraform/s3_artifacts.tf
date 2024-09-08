@@ -1,6 +1,6 @@
 # Create a basic S3 bucket
 resource "aws_s3_bucket" "artifact-bucket" {
-  bucket = "lambda-artifacts-1"
+  bucket = "rahul-kamble-personal-org-lambda-artifacts"
 
   tags = {
     Name        = "lambda-artifacts-1"
