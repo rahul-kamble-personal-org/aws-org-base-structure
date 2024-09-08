@@ -1,21 +1,28 @@
-# VPC
+
+# VPC resource
 resource "aws_vpc" "main" {
   cidr_block           = "10.0.0.0/16"
   enable_dns_hostnames = true
   enable_dns_support   = true
 
-  tags = {
-    Name = "main-vpc"
-  }
+  tags = merge(
+    local.default_tags,
+    {
+      Name = "main-vpc"
+    }
+  )
 }
 
 # Internet Gateway
 resource "aws_internet_gateway" "main" {
   vpc_id = aws_vpc.main.id
 
-  tags = {
-    Name = "main-igw"
-  }
+  tags = merge(
+    local.default_tags,
+    {
+      Name = "main-igw"
+    }
+  )
 }
 
 # Subnets
@@ -24,9 +31,12 @@ resource "aws_subnet" "public_1" {
   cidr_block        = "10.0.1.0/24"
   availability_zone = "eu-central-1a"
 
-  tags = {
-    Name = "Public Subnet 1"
-  }
+  tags = merge(
+    local.default_tags,
+    {
+      Name = "Public Subnet 1"
+    }
+  )
 }
 
 resource "aws_subnet" "public_2" {
@@ -34,9 +44,12 @@ resource "aws_subnet" "public_2" {
   cidr_block        = "10.0.2.0/24"
   availability_zone = "eu-central-1b"
 
-  tags = {
-    Name = "Public Subnet 2"
-  }
+  tags = merge(
+    local.default_tags,
+    {
+      Name = "Public Subnet 2"
+    }
+  )
 }
 
 resource "aws_subnet" "private_1" {
@@ -44,9 +57,12 @@ resource "aws_subnet" "private_1" {
   cidr_block        = "10.0.3.0/24"
   availability_zone = "eu-central-1a"
 
-  tags = {
-    Name = "Private Subnet 1"
-  }
+  tags = merge(
+    local.default_tags,
+    {
+      Name = "Private Subnet 1"
+    }
+  )
 }
 
 resource "aws_subnet" "private_2" {
@@ -54,9 +70,12 @@ resource "aws_subnet" "private_2" {
   cidr_block        = "10.0.4.0/24"
   availability_zone = "eu-central-1b"
 
-  tags = {
-    Name = "Private Subnet 2"
-  }
+  tags = merge(
+    local.default_tags,
+    {
+      Name = "Private Subnet 2"
+    }
+  )
 }
 
 # Route Table for Public Subnets
@@ -68,9 +87,12 @@ resource "aws_route_table" "public" {
     gateway_id = aws_internet_gateway.main.id
   }
 
-  tags = {
-    Name = "Public Route Table"
-  }
+  tags = merge(
+    local.default_tags,
+    {
+      Name = "Public Route Table"
+    }
+  )
 }
 
 # Route Table Associations for Public Subnets
@@ -88,9 +110,12 @@ resource "aws_route_table_association" "public_2" {
 resource "aws_route_table" "private" {
   vpc_id = aws_vpc.main.id
 
-  tags = {
-    Name = "Private Route Table"
-  }
+  tags = merge(
+    local.default_tags,
+    {
+      Name = "Private Route Table"
+    }
+  )
 }
 
 # Route Table Associations for Private Subnets
@@ -125,7 +150,10 @@ resource "aws_security_group" "allow_ssh" {
     cidr_blocks = ["0.0.0.0/0"]
   }
 
-  tags = {
-    Name = "allow_ssh"
-  }
+  tags = merge(
+    local.default_tags,
+    {
+      Name = "allow_ssh"
+    }
+  )
 }
