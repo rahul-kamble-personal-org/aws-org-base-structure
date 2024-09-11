@@ -156,11 +156,3 @@ resource "aws_security_group" "allow_ssh" {
     }
   )
 }
-
-# Assume you have defined local.default_tags elsewhere in your Terraform configuration
-locals {
-  default_tags = {
-    Environment = "Production"
-    Project     = "VPC Setup"
-  }
-}
