@@ -119,9 +119,9 @@ resource "aws_route_table_association" "private_2" {
 
 # VPC Endpoint for DynamoDB
 resource "aws_vpc_endpoint" "dynamodb" {
-  vpc_id       = aws_vpc.main.id
-  service_name = "com.amazonaws.eu-central-1.dynamodb"
-  route_table_ids = [aws_route_table.private.id]
+  vpc_id            = aws_vpc.main.id
+  service_name      = "com.amazonaws.eu-central-1.dynamodb"
+  route_table_ids   = [aws_route_table.private.id]
   vpc_endpoint_type = "Gateway"
   tags = merge(
     local.default_tags,
