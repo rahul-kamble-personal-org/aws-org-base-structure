@@ -71,28 +71,6 @@ resource "aws_subnet" "private_2" {
   )
 }
 
-# NAT Gateway and Elastic IP
-resource "aws_eip" "nat" {
-  domain = "vpc"
-  tags = merge(
-    local.default_tags,
-    {
-      Name = "NAT Gateway EIP"
-    }
-  )
-}
-
-resource "aws_nat_gateway" "main" {
-  allocation_id = aws_eip.nat.id
-  subnet_id     = aws_subnet.public_1.id
-  tags = merge(
-    local.default_tags,
-    {
-      Name = "Main NAT Gateway"
-    }
-  )
-}
-
 # Route Tables
 resource "aws_route_table" "public" {
   vpc_id = aws_vpc.main.id
@@ -110,10 +88,6 @@ resource "aws_route_table" "public" {
 
 resource "aws_route_table" "private" {
   vpc_id = aws_vpc.main.id
-  route {
-    cidr_block     = "0.0.0.0/0"
-    nat_gateway_id = aws_nat_gateway.main.id
-  }
   tags = merge(
     local.default_tags,
     {
@@ -143,6 +117,20 @@ resource "aws_route_table_association" "private_2" {
   route_table_id = aws_route_table.private.id
 }
 
+# VPC Endpoint for DynamoDB
+resource "aws_vpc_endpoint" "dynamodb" {
+  vpc_id       = aws_vpc.main.id
+  service_name = "com.amazonaws.eu-central-1.dynamodb"
+  route_table_ids = [aws_route_table.private.id]
+  vpc_endpoint_type = "Gateway"
+  tags = merge(
+    local.default_tags,
+    {
+      Name = "DynamoDB VPC Endpoint"
+    }
+  )
+}
+
 # Security Group
 resource "aws_security_group" "allow_ssh" {
   name        = "allow_ssh"
@@ -167,4 +155,12 @@ resource "aws_security_group" "allow_ssh" {
       Name = "allow_ssh"
     }
   )
+}
+
+# Assume you have defined local.default_tags elsewhere in your Terraform configuration
+locals {
+  default_tags = {
+    Environment = "Production"
+    Project     = "VPC Setup"
+  }
 }
