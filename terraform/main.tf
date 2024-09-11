@@ -170,7 +170,7 @@ resource "aws_vpc_endpoint" "lambda" {
   vpc_endpoint_type   = "Interface"
   private_dns_enabled = true
   subnet_ids          = [aws_subnet.private_1.id, aws_subnet.private_2.id]
-  security_group_ids  = [aws_security_group.allow_ssh.id]  # Reusing existing security group
+  security_group_ids  = [aws_security_group.allow_ssh.id] # Reusing existing security group
   tags = merge(
     local.default_tags,
     {
