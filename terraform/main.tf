@@ -107,7 +107,7 @@ resource "aws_route_table" "public" {
   )
 }
 
-resource "aws_route_table" "private" {
+resource "aws_route_table" "private_1" {
   vpc_id = aws_vpc.main.id
   route {
     cidr_block     = "0.0.0.0/0"
@@ -116,16 +116,23 @@ resource "aws_route_table" "private" {
   tags = merge(
     local.default_tags,
     {
-      Name = "Private Route Table"
+      Name = "Private Route Table 1"
     }
   )
 }
 
-# Additional route for the second NAT Gateway
-resource "aws_route" "private_nat_2" {
-  route_table_id         = aws_route_table.private.id
-  destination_cidr_block = "0.0.0.0/0"
-  nat_gateway_id         = aws_nat_gateway.gw_2.id
+resource "aws_route_table" "private_2" {
+  vpc_id = aws_vpc.main.id
+  route {
+    cidr_block     = "0.0.0.0/0"
+    nat_gateway_id = aws_nat_gateway.gw_2.id
+  }
+  tags = merge(
+    local.default_tags,
+    {
+      Name = "Private Route Table 2"
+    }
+  )
 }
 
 # Route Table Associations
@@ -141,66 +148,39 @@ resource "aws_route_table_association" "public_2" {
 
 resource "aws_route_table_association" "private_1" {
   subnet_id      = aws_subnet.private_1.id
-  route_table_id = aws_route_table.private.id
+  route_table_id = aws_route_table.private_1.id
 }
 
 resource "aws_route_table_association" "private_2" {
   subnet_id      = aws_subnet.private_2.id
-  route_table_id = aws_route_table.private.id
-}
-
-# VPC Endpoint for DynamoDB
-resource "aws_vpc_endpoint" "dynamodb" {
-  vpc_id            = aws_vpc.main.id
-  service_name      = "com.amazonaws.eu-central-1.dynamodb"
-  route_table_ids   = [aws_route_table.private.id]
-  vpc_endpoint_type = "Gateway"
-  tags = merge(
-    local.default_tags,
-    {
-      Name = "DynamoDB VPC Endpoint"
-    }
-  )
-}
-
-# VPC Endpoint for Lambda
-resource "aws_vpc_endpoint" "lambda" {
-  vpc_id              = aws_vpc.main.id
-  service_name        = "com.amazonaws.eu-central-1.lambda"
-  vpc_endpoint_type   = "Interface"
-  private_dns_enabled = true
-  subnet_ids          = [aws_subnet.private_1.id, aws_subnet.private_2.id]
-  security_group_ids  = [aws_security_group.allow_ssh.id] # Reusing existing security group
-  tags = merge(
-    local.default_tags,
-    {
-      Name = "Lambda VPC Endpoint"
-    }
-  )
+  route_table_id = aws_route_table.private_2.id
 }
 
 # Security Group
-resource "aws_security_group" "allow_ssh" {
-  name        = "allow_ssh"
-  description = "Allow SSH inbound traffic and all outbound traffic"
+resource "aws_security_group" "allow_internal" {
+  name        = "allow_internal"
+  description = "Allow all internal VPC traffic"
   vpc_id      = aws_vpc.main.id
+
   ingress {
-    description = "SSH from anywhere"
-    from_port   = 22
-    to_port     = 22
-    protocol    = "tcp"
-    cidr_blocks = ["0.0.0.0/0"]
+    description = "All traffic within VPC"
+    from_port   = 0
+    to_port     = 0
+    protocol    = "-1"
+    cidr_blocks = [aws_vpc.main.cidr_block]
   }
+
   egress {
     from_port   = 0
     to_port     = 0
     protocol    = "-1"
     cidr_blocks = ["0.0.0.0/0"]
   }
+
   tags = merge(
     local.default_tags,
     {
-      Name = "allow_ssh"
+      Name = "allow_internal"
     }
   )
 }
