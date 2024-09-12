@@ -31,20 +31,7 @@ resource "aws_subnet" "public_1" {
   tags = merge(
     local.default_tags,
     {
-      Name = "Public Subnet 1"
-    }
-  )
-}
-
-resource "aws_subnet" "public_2" {
-  vpc_id                  = aws_vpc.main.id
-  cidr_block              = "10.0.2.0/24"
-  availability_zone       = "eu-central-1b"
-  map_public_ip_on_launch = true
-  tags = merge(
-    local.default_tags,
-    {
-      Name = "Public Subnet 2"
+      Name = "Public Subnet"
     }
   )
 }
@@ -56,40 +43,19 @@ resource "aws_subnet" "private_1" {
   tags = merge(
     local.default_tags,
     {
-      Name = "Private Subnet 1"
+      Name = "Private Subnet"
     }
   )
 }
 
-resource "aws_subnet" "private_2" {
-  vpc_id            = aws_vpc.main.id
-  cidr_block        = "10.0.4.0/24"
-  availability_zone = "eu-central-1b"
-  tags = merge(
-    local.default_tags,
-    {
-      Name = "Private Subnet 2"
-    }
-  )
-}
-
-# NAT Gateways
+# NAT Gateway
 resource "aws_eip" "nat_1" {
-  domain = "vpc"
-}
-
-resource "aws_eip" "nat_2" {
   domain = "vpc"
 }
 
 resource "aws_nat_gateway" "gw_1" {
   allocation_id = aws_eip.nat_1.id
   subnet_id     = aws_subnet.public_1.id
-}
-
-resource "aws_nat_gateway" "gw_2" {
-  allocation_id = aws_eip.nat_2.id
-  subnet_id     = aws_subnet.public_2.id
 }
 
 # Route Tables
@@ -116,21 +82,7 @@ resource "aws_route_table" "private_1" {
   tags = merge(
     local.default_tags,
     {
-      Name = "Private Route Table 1"
-    }
-  )
-}
-
-resource "aws_route_table" "private_2" {
-  vpc_id = aws_vpc.main.id
-  route {
-    cidr_block     = "0.0.0.0/0"
-    nat_gateway_id = aws_nat_gateway.gw_2.id
-  }
-  tags = merge(
-    local.default_tags,
-    {
-      Name = "Private Route Table 2"
+      Name = "Private Route Table"
     }
   )
 }
@@ -141,19 +93,9 @@ resource "aws_route_table_association" "public_1" {
   route_table_id = aws_route_table.public.id
 }
 
-resource "aws_route_table_association" "public_2" {
-  subnet_id      = aws_subnet.public_2.id
-  route_table_id = aws_route_table.public.id
-}
-
 resource "aws_route_table_association" "private_1" {
   subnet_id      = aws_subnet.private_1.id
   route_table_id = aws_route_table.private_1.id
-}
-
-resource "aws_route_table_association" "private_2" {
-  subnet_id      = aws_subnet.private_2.id
-  route_table_id = aws_route_table.private_2.id
 }
 
 # Security Group
@@ -192,8 +134,7 @@ resource "aws_vpc_endpoint" "dynamodb" {
   vpc_endpoint_type = "Gateway"
   route_table_ids = [
     aws_route_table.public.id,
-    aws_route_table.private_1.id,
-    aws_route_table.private_2.id
+    aws_route_table.private_1.id
   ]
   tags = merge(
     local.default_tags,
