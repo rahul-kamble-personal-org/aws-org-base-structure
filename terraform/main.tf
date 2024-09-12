@@ -185,11 +185,13 @@ resource "aws_security_group" "allow_internal" {
   )
 }
 
+# VPC Endpoint for DynamoDB
 resource "aws_vpc_endpoint" "dynamodb" {
   vpc_id            = aws_vpc.main.id
   service_name      = "com.amazonaws.eu-central-1.dynamodb"
   vpc_endpoint_type = "Gateway"
   route_table_ids = [
+    aws_route_table.public.id,
     aws_route_table.private_1.id,
     aws_route_table.private_2.id
   ]
