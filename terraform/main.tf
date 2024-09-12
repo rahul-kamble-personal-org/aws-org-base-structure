@@ -47,16 +47,16 @@ resource "aws_subnet" "private_1" {
     }
   )
 }
+# commented for cost saving
+# # NAT Gateway
+# resource "aws_eip" "nat_1" {
+#   domain = "vpc"
+# }
 
-# NAT Gateway
-resource "aws_eip" "nat_1" {
-  domain = "vpc"
-}
-
-resource "aws_nat_gateway" "gw_1" {
-  allocation_id = aws_eip.nat_1.id
-  subnet_id     = aws_subnet.public_1.id
-}
+# resource "aws_nat_gateway" "gw_1" {
+#   allocation_id = aws_eip.nat_1.id
+#   subnet_id     = aws_subnet.public_1.id
+# }
 
 # Route Tables
 resource "aws_route_table" "public" {
@@ -75,10 +75,11 @@ resource "aws_route_table" "public" {
 
 resource "aws_route_table" "private_1" {
   vpc_id = aws_vpc.main.id
-  route {
-    cidr_block     = "0.0.0.0/0"
-    nat_gateway_id = aws_nat_gateway.gw_1.id
-  }
+  # commented for cost saving
+  # route {
+  #   cidr_block     = "0.0.0.0/0"
+  #   nat_gateway_id = aws_nat_gateway.gw_1.id
+  # }
   tags = merge(
     local.default_tags,
     {
