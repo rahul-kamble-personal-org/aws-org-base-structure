@@ -2,15 +2,6 @@ name: Continuous Deployment
 
 on:
   workflow_dispatch:
-    inputs:
-      operation:
-        description: 'Operation to perform (create or destroy)'
-        required: true
-        default: 'create'
-        type: choice
-        options:
-        - create
-        - destroy
 
 jobs:
   terraform-cd:
@@ -55,19 +46,11 @@ jobs:
       run: |
         cd terraform
         terraform plan \
-          -var="operation=${{ github.event.inputs.operation }}" \
           -out=tfplan \
           -lock=true \
           -lock-timeout=300s
 
     - name: Terraform Apply
-      if: github.event.inputs.operation == 'create'
       run: |
         cd terraform
         terraform apply tfplan
-
-    - name: Terraform Destroy
-      if: github.event.inputs.operation == 'destroy'
-      run: |
-        cd terraform
-        terraform destroy -auto-approve -var="operation=destroy"
