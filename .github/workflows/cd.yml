@@ -2,6 +2,15 @@ name: Continuous Deployment
 
 on:
   workflow_dispatch:
+    inputs:
+      action:
+        description: 'Choose action (create or destroy)'
+        required: true
+        default: 'create'
+        type: choice
+        options:
+        - create
+        - destroy
 
 jobs:
   terraform-cd:
@@ -43,6 +52,7 @@ jobs:
           -backend-config="dynamodb_table=terraform-state-lock"
 
     - name: Terraform Plan
+      if: github.event.inputs.action == 'create'
       run: |
         cd terraform
         terraform plan \
@@ -51,6 +61,13 @@ jobs:
           -lock-timeout=300s
 
     - name: Terraform Apply
+      if: github.event.inputs.action == 'create'
       run: |
         cd terraform
         terraform apply tfplan
+
+    - name: Terraform Destroy
+      if: github.event.inputs.action == 'destroy'
+      run: |
+        cd terraform
+        terraform destroy -auto-approve
