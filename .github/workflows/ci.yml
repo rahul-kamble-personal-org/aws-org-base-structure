@@ -1,4 +1,4 @@
-name: Continuou Integration
+name: Continuous Integration
 
 on:
   push:
@@ -7,6 +7,7 @@ on:
   pull_request:
     branches:
       - '*'
+  workflow_dispatch:  # This enables manual triggering
 
 jobs:
   terraform-ci:
@@ -47,7 +48,7 @@ jobs:
           -backend-config="region=${AWS_REGION}" \
           -backend-config="dynamodb_table=terraform-state-lock"
         
-
+        
     - name: Terraform Format
       run: |
         cd terraform
