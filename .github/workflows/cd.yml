@@ -6,6 +6,7 @@ on:
 jobs:
   terraform-cd:
     runs-on: ubuntu-latest
+    timeout-minutes: 10
     permissions:
       id-token: write
       contents: read
