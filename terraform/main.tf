@@ -1,5 +1,19 @@
+variable "operation" {
+  type        = string
+  description = "Operation to perform: 'create' or 'destroy'"
+  validation {
+    condition     = var.operation == "create" || var.operation == "destroy"
+    error_message = "The operation value must be either 'create' or 'destroy'."
+  }
+}
+
+locals {
+  create_infra = var.operation == "create"
+}
+
 # VPC resource
 resource "aws_vpc" "main" {
+  count                = local.create_infra ? 1 : 0
   cidr_block           = "10.0.0.0/16"
   enable_dns_hostnames = true
   enable_dns_support   = true
@@ -13,7 +27,8 @@ resource "aws_vpc" "main" {
 
 # Internet Gateway
 resource "aws_internet_gateway" "main" {
-  vpc_id = aws_vpc.main.id
+  count  = local.create_infra ? 1 : 0
+  vpc_id = aws_vpc.main[0].id
   tags = merge(
     local.default_tags,
     {
@@ -24,7 +39,8 @@ resource "aws_internet_gateway" "main" {
 
 # Subnets
 resource "aws_subnet" "public_1" {
-  vpc_id                  = aws_vpc.main.id
+  count                   = local.create_infra ? 1 : 0
+  vpc_id                  = aws_vpc.main[0].id
   cidr_block              = "10.0.1.0/24"
   availability_zone       = "eu-central-1a"
   map_public_ip_on_launch = true
@@ -37,7 +53,8 @@ resource "aws_subnet" "public_1" {
 }
 
 resource "aws_subnet" "private_1" {
-  vpc_id            = aws_vpc.main.id
+  count             = local.create_infra ? 1 : 0
+  vpc_id            = aws_vpc.main[0].id
   cidr_block        = "10.0.3.0/24"
   availability_zone = "eu-central-1a"
   tags = merge(
@@ -47,23 +64,14 @@ resource "aws_subnet" "private_1" {
     }
   )
 }
-# commented for cost saving
-# # NAT Gateway
-# resource "aws_eip" "nat_1" {
-#   domain = "vpc"
-# }
-
-# resource "aws_nat_gateway" "gw_1" {
-#   allocation_id = aws_eip.nat_1.id
-#   subnet_id     = aws_subnet.public_1.id
-# }
 
 # Route Tables
 resource "aws_route_table" "public" {
-  vpc_id = aws_vpc.main.id
+  count  = local.create_infra ? 1 : 0
+  vpc_id = aws_vpc.main[0].id
   route {
     cidr_block = "0.0.0.0/0"
-    gateway_id = aws_internet_gateway.main.id
+    gateway_id = aws_internet_gateway.main[0].id
   }
   tags = merge(
     local.default_tags,
@@ -74,12 +82,8 @@ resource "aws_route_table" "public" {
 }
 
 resource "aws_route_table" "private_1" {
-  vpc_id = aws_vpc.main.id
-  # commented for cost saving
-  # route {
-  #   cidr_block     = "0.0.0.0/0"
-  #   nat_gateway_id = aws_nat_gateway.gw_1.id
-  # }
+  count  = local.create_infra ? 1 : 0
+  vpc_id = aws_vpc.main[0].id
   tags = merge(
     local.default_tags,
     {
@@ -90,27 +94,30 @@ resource "aws_route_table" "private_1" {
 
 # Route Table Associations
 resource "aws_route_table_association" "public_1" {
-  subnet_id      = aws_subnet.public_1.id
-  route_table_id = aws_route_table.public.id
+  count          = local.create_infra ? 1 : 0
+  subnet_id      = aws_subnet.public_1[0].id
+  route_table_id = aws_route_table.public[0].id
 }
 
 resource "aws_route_table_association" "private_1" {
-  subnet_id      = aws_subnet.private_1.id
-  route_table_id = aws_route_table.private_1.id
+  count          = local.create_infra ? 1 : 0
+  subnet_id      = aws_subnet.private_1[0].id
+  route_table_id = aws_route_table.private_1[0].id
 }
 
 # Security Group
 resource "aws_security_group" "allow_internal" {
+  count       = local.create_infra ? 1 : 0
   name        = "allow_internal"
   description = "Allow all internal VPC traffic"
-  vpc_id      = aws_vpc.main.id
+  vpc_id      = aws_vpc.main[0].id
 
   ingress {
     description = "All traffic within VPC"
     from_port   = 0
     to_port     = 0
     protocol    = "-1"
-    cidr_blocks = [aws_vpc.main.cidr_block]
+    cidr_blocks = [aws_vpc.main[0].cidr_block]
   }
 
   egress {
@@ -130,12 +137,13 @@ resource "aws_security_group" "allow_internal" {
 
 # VPC Endpoint for DynamoDB
 resource "aws_vpc_endpoint" "dynamodb" {
-  vpc_id            = aws_vpc.main.id
+  count             = local.create_infra ? 1 : 0
+  vpc_id            = aws_vpc.main[0].id
   service_name      = "com.amazonaws.eu-central-1.dynamodb"
   vpc_endpoint_type = "Gateway"
   route_table_ids = [
-    aws_route_table.public.id,
-    aws_route_table.private_1.id
+    aws_route_table.public[0].id,
+    aws_route_table.private_1[0].id
   ]
   tags = merge(
     local.default_tags,
