@@ -144,3 +144,18 @@ resource "aws_vpc_endpoint" "dynamodb" {
     }
   )
 }
+
+resource "aws_vpc_endpoint" "lambda" {
+  vpc_id              = aws_vpc.main.id
+  service_name        = "com.amazonaws.eu-central-1.lambda"
+  vpc_endpoint_type   = "Interface"
+  subnet_ids          = [aws_subnet.private_1.id]
+  security_group_ids  = [aws_security_group.allow_internal.id]
+  private_dns_enabled = true
+  tags = merge(
+    local.default_tags,
+    {
+      Name = "Lambda VPC Endpoint"
+    }
+  )
+}
